@@ -130,6 +130,15 @@ function App() {
                 maxZoom: 19,
             }).addTo(mapInstanceRef.current);
 
+            // 页面加载时动画显示难度图例
+            setTimeout(() => {
+                const legend = document.getElementById('difficulty-legend');
+                if (legend) {
+                    legend.style.opacity = '1';
+                    legend.style.transform = 'translateY(0)';
+                }
+            }, 600); // 600ms 延迟，让地图先加载
+
             return () => {
                 if (mapInstanceRef.current) {
                     mapInstanceRef.current.remove();
@@ -326,7 +335,7 @@ function App() {
             } else if (destination.difficulty === 'advanced') {
                 difficultyHtml = '<div class="w-4 h-4 bg-white rounded-sm flex items-center justify-center"><div class="w-2.5 h-2.5 bg-black transform rotate-45"></div></div>';
             } else if (destination.difficulty === 'expert') {
-                difficultyHtml = '<div class="flex gap-0.5 h-4"><div class="w-2.5 h-4 bg-white rounded-sm flex items-center justify-center"><div class="w-1.5 h-1.5 bg-black transform rotate-45"></div></div><div class="w-2.5 h-4 bg-white rounded-sm flex items-center justify-center"><div class="w-1.5 h-1.5 bg-black transform rotate-45"></div></div></div>';
+                difficultyHtml = '<div class="bg-white rounded-sm px-1 py-0.5 flex gap-0.5 h-4 items-center"><div class="w-1.5 h-1.5 bg-black transform rotate-45"></div><div class="w-1.5 h-1.5 bg-black transform rotate-45"></div></div>';
             }
             difficultyContainer.innerHTML = difficultyHtml;
         }
@@ -342,6 +351,13 @@ function App() {
         if (detailCard) {
             detailCard.classList.remove('translate-y-full');
         }
+        
+        // 隐藏难度图例，带向下滑动动画
+        const legend = document.getElementById('difficulty-legend');
+        if (legend) {
+            legend.style.opacity = '0';
+            legend.style.transform = 'translateY(100%)';
+        }
     }
 
     function hideDetailCard() {
@@ -354,6 +370,15 @@ function App() {
         updateActiveState(null);
         if (mapInstanceRef.current) {
             mapInstanceRef.current.flyTo([49.8, -122.9], 8, { animate: true, duration: 1 });
+        }
+        
+        // 延迟显示难度图例，带动画
+        const legend = document.getElementById('difficulty-legend');
+        if (legend) {
+            setTimeout(() => {
+                legend.style.opacity = '1';
+                legend.style.transform = 'translateY(0)';
+            }, 600); // 600ms 延迟
         }
     }
 
@@ -501,7 +526,6 @@ function App() {
             {/* 地图容器 */}
             <div id="map" ref={mapRef} className="absolute inset-0 z-0"></div>
 
-
             {/* 顶部目的地列表 */}
             <div id="top-destinations-container" className="fixed top-0 left-0 right-0 z-10 pt-8 md:pt-6">
                 <div 
@@ -555,13 +579,9 @@ function App() {
                                             </div>
                                         )}
                                         {dest.difficulty === 'expert' && (
-                                            <div className="flex gap-0.5 h-4">
-                                                <div className="w-2.5 h-4 bg-white rounded-sm flex items-center justify-center">
-                                                    <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
-                                                </div>
-                                                <div className="w-2.5 h-4 bg-white rounded-sm flex items-center justify-center">
-                                                    <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
-                                                </div>
+                                            <div className="bg-white rounded-sm px-1 py-0.5 flex gap-0.5 h-4 items-center">
+                                                <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
+                                                <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
                                             </div>
                                         )}
                                     </div>
@@ -661,6 +681,53 @@ function App() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* 难度图例 - 全宽底部横条 */}
+            <div id="difficulty-legend" className="fixed bottom-0 left-0 right-0 z-10 backdrop-blur-2xl h-12 transition-all duration-300"
+                style={{
+                    opacity: 0,
+                    transform: 'translateY(100%)',
+                    background: `linear-gradient(135deg, 
+                        rgba(255, 255, 255, 0.1) 0%, 
+                        rgba(255, 255, 255, 0.05) 25%,
+                        rgba(255, 255, 255, 0.08) 50%,
+                        rgba(255, 255, 255, 0.03) 75%,
+                        rgba(255, 255, 255, 0.06) 100%)`,
+                    borderTop: `1px solid rgba(255, 255, 255, 0.15)`,
+                    boxShadow: `
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+                        0 -4px 16px rgba(0, 0, 0, 0.2)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '32px',
+                    transform: 'translateY(-4px)'
+                }}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', transform: 'translateY(-3px)'}}>
+                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(34, 197, 94, 0.7)'}}>
+                        <div style={{width: '6px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%'}}></div>
+                    </div>
+                    <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>初级</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', transform: 'translateY(-3px)'}}>
+                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(234, 179, 8, 0.7)'}}>
+                        <div style={{width: '6px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%'}}></div>
+                    </div>
+                    <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>中级</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', transform: 'translateY(-3px)'}}>
+                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(249, 115, 22, 0.7)'}}>
+                        <div style={{width: '6px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%'}}></div>
+                    </div>
+                    <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>高级</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', transform: 'translateY(-3px)'}}>
+                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(220, 38, 38, 0.7)'}}>
+                        <div style={{width: '6px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%'}}></div>
+                    </div>
+                    <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>专家级</span>
                 </div>
             </div>
         </div>
