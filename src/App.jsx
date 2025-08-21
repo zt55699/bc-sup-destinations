@@ -349,7 +349,9 @@ function App() {
         }
 
         if (detailCard) {
-            detailCard.classList.remove('translate-y-full');
+            setTimeout(() => {
+                detailCard.classList.remove('translate-y-full');
+            }, 1000); // 1秒延迟
         }
         
         // 隐藏难度图例，带向下滑动动画
@@ -520,6 +522,11 @@ function App() {
                 /* 瓦片层的底层背景 */
                 .leaflet-tile-pane {
                     background: #2c2c2c;
+                }
+                
+                /* 增加地图瓦片亮度，特别是水域 */
+                .leaflet-tile {
+                    filter: brightness(1.4) contrast(0.95);
                 }
             `}</style>
 
@@ -712,7 +719,7 @@ function App() {
                     <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>初级</span>
                 </div>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', transform: 'translateY(-3px)'}}>
-                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(234, 179, 8, 0.7)'}}>
+                    <div style={{width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', opacity: '0.8', backgroundColor: 'rgba(59, 130, 246, 0.7)'}}>
                         <div style={{width: '6px', height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%'}}></div>
                     </div>
                     <span style={{color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', fontWeight: '500'}}>中级</span>
