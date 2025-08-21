@@ -3,14 +3,20 @@ import MapContainer from './components/Map/MapContainer.jsx';
 import DifficultyLegend from './components/Map/DifficultyLegend.jsx';
 import DestinationList from './components/DestinationList/DestinationList.jsx';
 import DetailCard from './components/DetailCard/DetailCard.jsx';
+import RouteDetailCard from './components/DetailCard/RouteDetailCard.jsx';
 import { useDestinations } from './hooks/useDestinations.js';
 import { useMap } from './hooks/useMap.js';
 import { useAutoScroll } from './hooks/useAutoScroll.js';
 import { mapStyles } from './styles/mapStyles.js';
+import { calculateDistance, calculateRouteDistance } from './utils/mapUtils.js';
 
 function App() {
     const [activeDestinationId, setActiveDestinationId] = useState(null);
     const [activeDestination, setActiveDestination] = useState(null);
+    const [routeInfo, setRouteInfo] = useState(null);
+    const [routeStartCoords, setRouteStartCoords] = useState(null);
+    const [isRouteAnimating, setIsRouteAnimating] = useState(false);
+    const [showRoutesOnly, setShowRoutesOnly] = useState(false);
 
     const { 
         sortedDestinations, 
@@ -24,8 +30,10 @@ function App() {
         mapInstanceRef, 
         addMarkers, 
         flyToDestination, 
-        resetMapView 
-    } = useMap();
+        resetMapView,
+        showRoute,
+        clearRoute
+    } = useMap(setIsRouteAnimating);
 
     const { stopAutoScroll } = useAutoScroll();
 
@@ -56,12 +64,18 @@ function App() {
 
     const hideDetailCard = () => {
         const detailCard = document.getElementById('detail-card');
+        const routeDetailCard = document.getElementById('route-detail-card');
         
         if (detailCard) {
             detailCard.classList.add('translate-y-full');
         }
+        if (routeDetailCard) {
+            routeDetailCard.classList.add('translate-y-full');
+        }
         
         setActiveDestination(null);
+        setRouteInfo(null);
+        setRouteStartCoords(null);
         updateActiveState(null);
         resetMapView();
         
@@ -76,7 +90,19 @@ function App() {
     };
 
     const selectDestination = (id) => {
+        // Prevent interaction during route animation
+        if (isRouteAnimating) return;
+        
         stopAutoScroll();
+        
+        // Clear any existing route and route detail card
+        clearRoute();
+        const routeDetailCard = document.getElementById('route-detail-card');
+        if (routeDetailCard) {
+            routeDetailCard.classList.add('translate-y-full');
+        }
+        setRouteInfo(null);
+        setRouteStartCoords(null);
         
         if (activeDestinationId === id) {
             hideDetailCard();
@@ -108,6 +134,14 @@ function App() {
         }
     };
 
+    const getDisplayedDestinations = () => {
+        const filtered = getFilteredAndSortedDestinations();
+        if (showRoutesOnly) {
+            return filtered.filter(dest => dest.route);
+        }
+        return filtered;
+    };
+
     return (
         <div className="bg-gray-900 overflow-hidden h-screen">
             <style>{mapStyles}</style>
@@ -115,18 +149,35 @@ function App() {
             <MapContainer mapRef={mapRef} />
 
             <DestinationList
-                destinations={getFilteredAndSortedDestinations()}
+                destinations={getDisplayedDestinations()}
                 activeDestinationId={activeDestinationId}
                 hiddenDestinations={hiddenDestinations}
                 onStopAutoScroll={stopAutoScroll}
                 onSelectDestination={selectDestination}
                 onToggleVisibility={handleToggleVisibility}
+                showRoutesOnly={showRoutesOnly}
+                onToggleRoutesFilter={() => setShowRoutesOnly(!showRoutesOnly)}
             />
 
             <DetailCard
                 destination={activeDestination}
                 onClose={hideDetailCard}
                 mapInstanceRef={mapInstanceRef}
+                onShowRoute={(startCoords, endCoords, routeData) => {
+                    if (isRouteAnimating) return; // Prevent multiple route animations
+                    setRouteInfo(routeData);
+                    setRouteStartCoords(startCoords);
+                    setIsRouteAnimating(true);
+                    showRoute(startCoords, endCoords, routeData);
+                }}
+            />
+
+            <RouteDetailCard
+                routeInfo={routeInfo}
+                startCoords={routeStartCoords}
+                endCoords={routeInfo?.coords}
+                distances={routeInfo && routeStartCoords ? calculateRouteDistance(routeStartCoords, routeInfo) : null}
+                onClose={hideDetailCard}
             />
 
             <DifficultyLegend />

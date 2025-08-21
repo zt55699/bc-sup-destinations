@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ImageGallery from './ImageGallery.jsx';
 
-function DetailCard({ destination, onClose, mapInstanceRef }) {
+function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
     const [currentImage, setCurrentImage] = useState('');
 
     React.useEffect(() => {
@@ -130,25 +130,47 @@ function DetailCard({ destination, onClose, mapInstanceRef }) {
                                 {destination.difficulty && renderDifficultyIcon(destination.difficulty)}
                             </div>
                         </div>
-                        <a 
-                            id="detail-gmaps-link" 
-                            href={destination.googleMapsUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="w-8 h-8 flex items-center justify-center backdrop-blur-xl rounded-full text-white/60 hover:text-white transition-all duration-300"
-                            style={{
-                                background: `linear-gradient(135deg, 
-                                    rgba(255, 255, 255, 0.08) 0%, 
-                                    rgba(255, 255, 255, 0.05) 100%)`,
-                                boxShadow: `
-                                    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
-                                    inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
-                                    0 2px 8px rgba(0, 0, 0, 0.2)`
-                            }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
-                        </a>
+                        <div className="flex items-center gap-2">
+                            {destination.route && (
+                                <button 
+                                    onClick={() => onShowRoute && onShowRoute(destination.coords, destination.route.coords, destination.route)}
+                                    className="w-8 h-8 flex items-center justify-center backdrop-blur-xl rounded-full text-sky-400 hover:text-sky-300 transition-all duration-300"
+                                    style={{
+                                        background: `linear-gradient(135deg, 
+                                            rgba(56, 189, 248, 0.15) 0%, 
+                                            rgba(56, 189, 248, 0.08) 100%)`,
+                                        boxShadow: `
+                                            inset 0 1px 0 0 rgba(56, 189, 248, 0.25),
+                                            inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
+                                            0 2px 8px rgba(56, 189, 248, 0.15)`
+                                    }}
+                                    title="显示路线"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
+                                    </svg>
+                                </button>
+                            )}
+                            <a 
+                                id="detail-gmaps-link" 
+                                href={destination.googleMapsUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="w-8 h-8 flex items-center justify-center backdrop-blur-xl rounded-full text-white/60 hover:text-white transition-all duration-300"
+                                style={{
+                                    background: `linear-gradient(135deg, 
+                                        rgba(255, 255, 255, 0.08) 0%, 
+                                        rgba(255, 255, 255, 0.05) 100%)`,
+                                    boxShadow: `
+                                        inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+                                        inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
+                                        0 2px 8px rgba(0, 0, 0, 0.2)`
+                                }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                     
                     <div id="detail-tags" className="flex flex-wrap gap-2 mt-2">

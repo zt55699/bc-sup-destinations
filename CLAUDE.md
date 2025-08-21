@@ -20,11 +20,11 @@ This is a single-page React application showcasing paddleboarding destinations i
 
 **Application Entry**: The app uses Vite with React 19. Entry point is `src/main.jsx` which mounts `src/App.jsx` to the DOM.
 
-**Single Component Design**: All functionality resides in `src/App.jsx` (560+ lines) containing:
+**Component Architecture**: Modularized React components with hooks:
 - 33 paddleboarding destinations with coordinates, descriptions, difficulty levels, and image URLs
-- Interactive Leaflet map with custom glass-morphism markers
-- Auto-scrolling destination list with visibility toggles
-- Detail card popup system
+- Interactive Leaflet map with custom glass-morphism markers and animated route visualization
+- Auto-scrolling destination list with visibility toggles and route filtering
+- Detail card popup system with route animation and distance calculations
 
 ### Key Data Model
 
@@ -39,7 +39,16 @@ Each destination object contains:
   difficultyColor: string,  // Hex color for difficulty
   description: string,      // Chinese description
   difficultyInfo: string,   // Difficulty details with symbol (●/■/◆/◆◆)
-  imageUrls: string[]       // Array of 3 image URLs (some still use imageUrl)
+  imageUrls: string[],      // Array of 3 image URLs (some still use imageUrl)
+  route?: {                 // Optional route information
+    destination: string,    // Route endpoint name
+    coords: [lat, lon],     // Route endpoint coordinates
+    description: string,    // Route description
+    stops?: Array<{         // Optional intermediate stops
+      name: string,
+      coords: [lat, lon]
+    }>
+  }
 }
 ```
 
@@ -51,6 +60,20 @@ Each destination object contains:
 - **Expert (专家级)**: Double black diamonds on white backgrounds
 
 Map markers have subtle color coding based on difficulty using low-saturation backgrounds.
+
+### Route System
+
+**Route Visualization**: Interactive animated routes between destinations with:
+- Multi-segment routing with waypoints and intermediate stops
+- Pause functionality at stops with thumbnail popups
+- Separate distance calculations for paddling and hiking segments
+- Route filtering to show only destinations with available routes
+
+**Route Features**:
+- Indian Arm → Silver Falls → Granite Falls (multi-stop route)
+- Harrison Lake → Harrison Lagoon (direct route)
+- Widgeon Falls combined paddling/hiking route
+- Distance calculations using Haversine formula
 
 ### Deployment
 

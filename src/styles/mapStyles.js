@@ -80,6 +80,29 @@ body {
     box-shadow: 0 0 15px #38bdf8;
 }
 
+/* 路线目的地标记 */
+.custom-map-marker.route-destination {
+    background-color: rgba(56, 189, 248, 0.2) !important;
+    border-color: rgba(56, 189, 248, 0.8) !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    animation: pulse-route 2s infinite;
+}
+.custom-map-marker.route-destination .inner-dot {
+    background-color: #38bdf8 !important;
+    box-shadow: 0 0 15px #38bdf8;
+}
+
+@keyframes pulse-route {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
 /* Liquid Glass 详情卡片效果 */
 .detail-card-container::before {
     content: '';
@@ -139,5 +162,34 @@ body {
 /* 增加地图瓦片亮度，特别是水域 */
 .leaflet-tile {
     filter: brightness(1.4) contrast(0.95);
+}
+
+/* 自定义路线弹窗样式 - 移除默认白色背景 */
+.leaflet-popup-content-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.leaflet-popup-tip {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Marquee animation for long route names */
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-130px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 10s linear infinite;
+    display: inline-block;
 }
 `;
