@@ -6,6 +6,7 @@ import WeatherIcon from '../WeatherIcon/WeatherIcon';
 function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
     const [currentImage, setCurrentImage] = useState('');
     const [weatherForecast, setWeatherForecast] = useState(null);
+    const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
     useEffect(() => {
         if (destination) {
@@ -48,8 +49,17 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                 legend.style.opacity = '0';
                 legend.style.transform = 'translateY(100%)';
             }
+            
+            // Reset scroll indicator when destination changes
+            setShowScrollIndicator(true);
         }
     }, [destination, mapInstanceRef]);
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5; // 5px threshold
+        setShowScrollIndicator(!isAtBottom);
+    };
 
     const formatDate = (dateString) => {
         // Parse date in local timezone to avoid UTC conversion issues
@@ -169,8 +179,12 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                                     }}
                                     title="显示路线"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.91" strokeMiterlimit="10">
+                                        <path d="M9.14,5.08c0,2.39-3.82,6-3.82,6S1.5,7.47,1.5,5.08A3.7,3.7,0,0,1,5.32,1.5,3.7,3.7,0,0,1,9.14,5.08Z"/>
+                                        <circle fill="currentColor" cx="5.32" cy="5.32" r="0.95"/>
+                                        <path d="M22.5,14.62c0,2.39-3.82,6-3.82,6s-3.82-3.58-3.82-6a3.7,3.7,0,0,1,3.82-3.57A3.7,3.7,0,0,1,22.5,14.62Z"/>
+                                        <circle fill="currentColor" cx="18.68" cy="14.86" r="0.95"/>
+                                        <path d="M4.36,13h4.3a2.39,2.39,0,0,1,2.39,2.39h0a2.39,2.39,0,0,1-2.39,2.39H3.89A2.39,2.39,0,0,0,1.5,20.11h0A2.39,2.39,0,0,0,3.89,22.5H19.64"/>
                                     </svg>
                                 </button>
                             )}
@@ -209,19 +223,46 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                         ))}
                     </div>
                     
-                    <div 
-                        className="mt-4 pr-2 scroll-snap-container custom-scrollbar" 
-                        style={{ 
-                            overflowY: 'scroll',
-                            height: '140px',
-                            minHeight: '140px',
-                            maxHeight: '140px'
-                        }}
-                    >
+                    <div className="relative">
+                        <div 
+                            className="mt-4 pr-2 scroll-snap-container custom-scrollbar" 
+                            style={{ 
+                                overflowY: 'scroll',
+                                height: '140px',
+                                minHeight: '140px',
+                                maxHeight: '140px'
+                            }}
+                            onScroll={handleScroll}
+                        >
+                        
+                        {/* Bottom gradient overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 h-4 pointer-events-none z-10"
+                            style={{
+                                background: `linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%)`
+                            }}>
+                        </div>
                         <div className="scroll-snap-item">
                             <p id="detail-description" className="text-gray-300 text-sm md:text-base leading-relaxed mb-4">
                                 {destination.description}
                             </p>
+                            
+                            {destination.requiresDayPass && (
+                                <div className="mb-4 p-3 rounded-xl backdrop-blur-xl border border-amber-400/30"
+                                    style={{
+                                        background: "linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 100%)",
+                                        boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 2px 8px rgba(251, 191, 36, 0.1)"
+                                    }}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                        <span className="text-amber-200 text-sm font-medium">需要日间通行证</span>
+                                    </div>
+                                    <p className="text-amber-200/80 text-xs">
+                                        此地点需要预订日间通行证才能进入，请提前在线预订。
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         
                         <div className="scroll-snap-item mb-4">
@@ -340,6 +381,18 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        )}
+                        </div>
+                        
+                        {/* Scroll indicator overlay - outside container */}
+                        {showScrollIndicator && (
+                            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
+                                <div className="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-12 text-white/60 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 16l-6-6h12l-6 6z"/>
+                                    </svg>
+                                </div>
                             </div>
                         )}
                     </div>

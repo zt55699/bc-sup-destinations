@@ -7,6 +7,7 @@ import RouteDetailCard from './components/DetailCard/RouteDetailCard.jsx';
 import { useDestinations } from './hooks/useDestinations.js';
 import { useMap } from './hooks/useMap.js';
 import { useAutoScroll } from './hooks/useAutoScroll.js';
+import { useFilters } from './hooks/useFilters.js';
 import { mapStyles } from './styles/mapStyles.js';
 import { calculateDistance, calculateRouteDistance } from './utils/mapUtils.js';
 
@@ -16,7 +17,6 @@ function App() {
     const [routeInfo, setRouteInfo] = useState(null);
     const [routeStartCoords, setRouteStartCoords] = useState(null);
     const [isRouteAnimating, setIsRouteAnimating] = useState(false);
-    const [showRoutesOnly, setShowRoutesOnly] = useState(false);
 
     const { 
         sortedDestinations, 
@@ -37,9 +37,20 @@ function App() {
 
     const { stopAutoScroll } = useAutoScroll();
 
+    const {
+        filters,
+        applyFilters,
+        handleFilterChange,
+        resetFilters,
+        hasActiveFilters
+    } = useFilters();
+
+    // Apply filters to get filtered destinations
+    const filteredDestinations = applyFilters(sortedDestinations);
+
     useEffect(() => {
-        addMarkers(sortedDestinations, hiddenDestinations, selectDestination);
-    }, [sortedDestinations, hiddenDestinations]);
+        addMarkers(filteredDestinations, hiddenDestinations, selectDestination);
+    }, [filteredDestinations, hiddenDestinations]);
 
     const updateActiveState = (newId) => {
         const allMarkers = document.querySelectorAll('.custom-map-marker');
@@ -135,11 +146,7 @@ function App() {
     };
 
     const getDisplayedDestinations = () => {
-        const filtered = getFilteredAndSortedDestinations();
-        if (showRoutesOnly) {
-            return filtered.filter(dest => dest.route);
-        }
-        return filtered;
+        return filteredDestinations;
     };
 
     return (
@@ -155,8 +162,10 @@ function App() {
                 onStopAutoScroll={stopAutoScroll}
                 onSelectDestination={selectDestination}
                 onToggleVisibility={handleToggleVisibility}
-                showRoutesOnly={showRoutesOnly}
-                onToggleRoutesFilter={() => setShowRoutesOnly(!showRoutesOnly)}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onResetFilters={resetFilters}
+                hasActiveFilters={hasActiveFilters}
             />
 
             <DetailCard

@@ -52,10 +52,28 @@
         .scroll-snap-container {
             scroll-behavior: smooth;
             scroll-snap-type: y mandatory;
+            scroll-snap-stop: always;
         }
         
         .scroll-snap-item {
             scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+        
+        /* Custom select styling for liquid glass effect */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff60' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1rem;
+            padding-right: 2rem;
+        }
+        
+        select option {
+            background-color: rgba(31, 41, 55, 0.95);
+            color: white;
+            padding: 0.25rem 0.5rem;
         }
     </style>
 </head>
