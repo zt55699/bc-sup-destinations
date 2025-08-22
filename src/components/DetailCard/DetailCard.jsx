@@ -3,7 +3,7 @@ import ImageGallery from './ImageGallery.jsx';
 import { getWeatherData } from '../../services/weatherService';
 import WeatherIcon from '../WeatherIcon/WeatherIcon';
 
-function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
+function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute, isFavorite, onAddToFavorites, onRemoveFromFavorites }) {
     const [currentImage, setCurrentImage] = useState('');
     const [weatherForecast, setWeatherForecast] = useState(null);
     const [showScrollIndicator, setShowScrollIndicator] = useState(true);
@@ -94,6 +94,14 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
         }
     };
 
+    const handleFavoriteToggle = () => {
+        if (isFavorite(destination.id)) {
+            onRemoveFromFavorites(destination.id);
+        } else {
+            onAddToFavorites(destination);
+        }
+    };
+
     if (!destination) {
         return (
             <div id="detail-card" className="fixed bottom-0 left-0 right-0 z-20 p-4 transform translate-y-full transition-transform duration-700 ease-in-out">
@@ -170,6 +178,36 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            <button 
+                                onClick={handleFavoriteToggle}
+                                className={`w-8 h-8 flex items-center justify-center backdrop-blur-xl rounded-full transition-all duration-300 ${
+                                    isFavorite(destination.id)
+                                        ? 'text-pink-400 hover:text-pink-300'
+                                        : 'text-white/60 hover:text-white'
+                                }`}
+                                style={{
+                                    background: `linear-gradient(135deg, 
+                                        ${isFavorite(destination.id) 
+                                            ? 'rgba(244, 114, 182, 0.15) 0%, rgba(244, 114, 182, 0.08) 100%'
+                                            : 'rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%'
+                                        })`,
+                                    boxShadow: `
+                                        inset 0 1px 0 0 ${isFavorite(destination.id) 
+                                            ? 'rgba(244, 114, 182, 0.25)'
+                                            : 'rgba(255, 255, 255, 0.15)'
+                                        },
+                                        inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
+                                        0 2px 8px ${isFavorite(destination.id) 
+                                            ? 'rgba(244, 114, 182, 0.15)'
+                                            : 'rgba(0, 0, 0, 0.2)'
+                                        }`
+                                }}
+                                title={isFavorite(destination.id) ? "从收藏夹移除" : "添加到收藏夹"}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={isFavorite(destination.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </button>
                             {destination.route && (
                                 <button 
                                     onClick={() => onShowRoute && onShowRoute(destination.coords, destination.route.coords, destination.route)}

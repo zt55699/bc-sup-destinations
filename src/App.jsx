@@ -11,6 +11,27 @@ import { useFilters } from './hooks/useFilters.js';
 import { mapStyles } from './styles/mapStyles.js';
 import { calculateDistance, calculateRouteDistance } from './utils/mapUtils.js';
 
+// LocalStorage utility functions for favorites
+const FAVORITES_STORAGE_KEY = 'bc-sup-destinations-favorites';
+
+const saveFavoritesToStorage = (favorites) => {
+    try {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+    } catch (error) {
+        console.warn('Failed to save favorites to localStorage:', error);
+    }
+};
+
+const loadFavoritesFromStorage = () => {
+    try {
+        const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+        console.warn('Failed to load favorites from localStorage:', error);
+        return [];
+    }
+};
+
 function App() {
     const [activeDestinationId, setActiveDestinationId] = useState(null);
     const [activeDestination, setActiveDestination] = useState(null);
@@ -18,6 +39,7 @@ function App() {
     const [routeStartCoords, setRouteStartCoords] = useState(null);
     const [isRouteAnimating, setIsRouteAnimating] = useState(false);
     const [pendingResumeTimeout, setPendingResumeTimeout] = useState(null);
+    const [favorites, setFavorites] = useState([]);
 
     const { 
         sortedDestinations, 
@@ -48,6 +70,55 @@ function App() {
 
     // Apply filters to get filtered destinations
     const filteredDestinations = applyFilters(sortedDestinations);
+
+    // Initialize favorites when destinations are loaded
+    useEffect(() => {
+        if (sortedDestinations.length > 0) {
+            // Try to load favorites from localStorage first
+            const savedFavorites = loadFavoritesFromStorage();
+            
+            if (savedFavorites.length > 0) {
+                // Validate that saved favorites still exist in destinations
+                const validFavorites = savedFavorites.filter(fav => 
+                    sortedDestinations.some(dest => dest.id === fav.id)
+                );
+                setFavorites(validFavorites);
+                
+                // Save validated favorites back to storage
+                if (validFavorites.length !== savedFavorites.length) {
+                    saveFavoritesToStorage(validFavorites);
+                }
+            } else if (favorites.length === 0) {
+                // Initialize with default favorites only if no saved favorites and no current favorites
+                const favoriteNames = ['Deep Cove', 'Indian Arm', 'Pitt Lake', 'Harrison Lake'];
+                const initialFavorites = favoriteNames.map(name => {
+                    const dest = sortedDestinations.find(d => d.name === name);
+                    return dest ? { id: dest.id, name: dest.name } : null;
+                }).filter(Boolean);
+                setFavorites(initialFavorites);
+                saveFavoritesToStorage(initialFavorites);
+            }
+        }
+    }, [sortedDestinations]);
+
+    // Favorites management functions
+    const addToFavorites = (destination) => {
+        if (!favorites.find(fav => fav.id === destination.id)) {
+            const newFavorites = [...favorites, { id: destination.id, name: destination.name }];
+            setFavorites(newFavorites);
+            saveFavoritesToStorage(newFavorites);
+        }
+    };
+
+    const removeFromFavorites = (destinationId) => {
+        const newFavorites = favorites.filter(fav => fav.id !== destinationId);
+        setFavorites(newFavorites);
+        saveFavoritesToStorage(newFavorites);
+    };
+
+    const isFavorite = (destinationId) => {
+        return favorites.some(fav => fav.id === destinationId);
+    };
 
     useEffect(() => {
         addMarkers(filteredDestinations, hiddenDestinations, selectDestination);
@@ -217,6 +288,8 @@ function App() {
                 onResetFilters={resetFilters}
                 hasActiveFilters={hasActiveFilters}
                 showFilterButton={!activeDestination && !routeInfo && !isRouteAnimating}
+                favorites={favorites}
+                onRemoveFromFavorites={removeFromFavorites}
             />
 
             <DetailCard
@@ -230,6 +303,9 @@ function App() {
                     setIsRouteAnimating(true);
                     showRoute(startCoords, endCoords, routeData);
                 }}
+                isFavorite={isFavorite}
+                onAddToFavorites={addToFavorites}
+                onRemoveFromFavorites={removeFromFavorites}
             />
 
             <RouteDetailCard

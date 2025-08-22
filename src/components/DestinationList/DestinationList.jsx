@@ -12,13 +12,17 @@ function DestinationList({
     onFilterChange,
     onResetFilters,
     hasActiveFilters,
-    showFilterButton = true
+    showFilterButton = true,
+    favorites = [],
+    onRemoveFromFavorites
 }) {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    const [showFavoritesDropdown, setShowFavoritesDropdown] = useState(false);
     const [previousDestinations, setPreviousDestinations] = useState(destinations);
     const [animatingOut, setAnimatingOut] = useState(new Set());
     const [wasHiddenBefore, setWasHiddenBefore] = useState(false);
     const dropdownRef = useRef(null);
+    const favoritesRef = useRef(null);
 
     // Handle filter animation when destinations change
     useEffect(() => {
@@ -80,10 +84,56 @@ function DestinationList({
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowFilterDropdown(false);
             }
+            if (favoritesRef.current && !favoritesRef.current.contains(event.target)) {
+                setShowFavoritesDropdown(false);
+            }
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Handle favorite selection
+    const handleFavoriteSelect = (favoriteId) => {
+        onSelectDestination(favoriteId);
+        setShowFavoritesDropdown(false);
+    };
+
+    // Remove favorite from list
+    const removeFavorite = (favoriteId) => {
+        onRemoveFromFavorites(favoriteId);
+    };
+
+    // Render difficulty icon (same as DetailCard)
+    const renderDifficultyIcon = (difficulty) => {
+        switch (difficulty) {
+            case 'beginner':
+                return <div className="w-3 h-3 rounded-full bg-green-500"></div>;
+            case 'intermediate':
+                return <div className="w-3 h-3 bg-blue-500"></div>;
+            case 'advanced':
+                return (
+                    <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 bg-black transform rotate-45"></div>
+                    </div>
+                );
+            case 'expert':
+                return (
+                    <div className="bg-white rounded-sm px-1 py-0.5 flex gap-0.5 h-4 items-center">
+                        <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
+                        <div className="w-1.5 h-1.5 bg-black transform rotate-45"></div>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    // Get favorite data with difficulty info
+    const getFavoriteData = (favoriteId) => {
+        const destination = destinations.find(d => d.id === favoriteId);
+        const favorite = favorites.find(f => f.id === favoriteId);
+        return favorite && destination ? { ...favorite, difficulty: destination.difficulty } : favorite;
+    };
 
     return (
         <div id="top-destinations-container" className="fixed top-0 left-0 right-0 z-10 pt-8 md:pt-6">
@@ -149,7 +199,7 @@ function DestinationList({
                     </button>
 
                     {showFilterDropdown && (
-                    <div className="absolute top-0 left-14 w-64 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-lg p-3 z-20">
+                    <div className="absolute top-0 left-14 w-56 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-lg p-3 z-20">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-white font-medium text-sm">过滤条件</h3>
                             {hasActiveFilters && (
@@ -230,6 +280,73 @@ function DestinationList({
                             显示 {destinations.length} 个目的地
                         </div>
                     </div>
+                    )}
+                </div>
+            )}
+            
+            {showFilterButton && (
+                <div 
+                    className={`flex justify-start px-4 mt-2 relative ${
+                        wasHiddenBefore ? 'filter-button-container' : 'filter-button-container immediate'
+                    }`} 
+                    ref={favoritesRef}
+                >
+                    <button
+                        onClick={() => setShowFavoritesDropdown(!showFavoritesDropdown)}
+                        className={`w-8 h-8 rounded-full backdrop-blur-lg border transition-all duration-300 flex items-center justify-center ${
+                            showFavoritesDropdown
+                                ? 'bg-pink-500/20 border-pink-400/40 text-pink-300' 
+                                : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/15'
+                        }`}
+                        title="收藏夹"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" stroke="none">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </button>
+
+                    {showFavoritesDropdown && (
+                        <div className="absolute top-0 left-14 w-56 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-lg p-3 z-20">
+
+                            <div className="space-y-2">
+                                {favorites.length === 0 ? (
+                                    <div className="text-white/50 text-xs text-center py-2">暂无收藏</div>
+                                ) : (
+                                    favorites.map((favorite) => {
+                                        const favoriteData = getFavoriteData(favorite.id);
+                                        return (
+                                            <div 
+                                                key={favorite.id}
+                                                className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 transition-colors group cursor-pointer"
+                                                onClick={() => handleFavoriteSelect(favorite.id)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    {favoriteData?.difficulty && renderDifficultyIcon(favoriteData.difficulty)}
+                                                    <span className="text-white text-sm">{favorite.name}</span>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeFavorite(favorite.id);
+                                                    }}
+                                                    className="opacity-50 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-white/50 hover:text-red-400"
+                                                    title="移除收藏"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            <div className="text-xs text-white/50 mt-3 pt-2 border-t border-white/10">
+                                {favorites.length} 个收藏
+                            </div>
+                        </div>
                     )}
                 </div>
             )}

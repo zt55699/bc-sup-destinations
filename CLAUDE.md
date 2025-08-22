@@ -52,6 +52,18 @@ Each destination object contains:
 }
 ```
 
+### Favorites System
+
+**Features**: User-customizable favorites list with persistent storage:
+- Heart icon in detail cards and navigation bar for managing favorites
+- Dropdown menu below filter button showing favorited destinations
+- Default favorites: Deep Cove, Indian Arm, Pitt Lake, Harrison Lake
+- Click favorite to focus map on that location
+- Remove items with X button (visible on hover for desktop, always visible on mobile)
+- LocalStorage persistence with key `bc-sup-destinations-favorites`
+- Never expires unless manually cleared by user
+- Data validation on load to ensure favorites still exist in destinations
+
 ### Visual Difficulty System
 
 - **Beginner (初级)**: Green circle
