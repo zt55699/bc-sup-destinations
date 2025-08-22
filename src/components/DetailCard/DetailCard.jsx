@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery.jsx';
+import { getWeatherData, getWeatherIcon } from '../../services/weatherService';
 
 function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
     const [currentImage, setCurrentImage] = useState('');
+    const [weatherForecast, setWeatherForecast] = useState(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (destination) {
             const firstImage = destination.imageUrls ? destination.imageUrls[0] : destination.imageUrl;
             setCurrentImage(firstImage || '');
+            
+            // Fetch weather forecast
+            async function fetchForecast() {
+                try {
+                    const weather = await getWeatherData(destination.coords[0], destination.coords[1]);
+                    setWeatherForecast(weather);
+                } catch (error) {
+                    setWeatherForecast(null);
+                }
+            }
+            fetchForecast();
         }
     }, [destination]);
 
@@ -36,6 +49,15 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
             }
         }
     }, [destination, mapInstanceRef]);
+
+    const formatDate = (dateString) => {
+        // Parse date in local timezone to avoid UTC conversion issues
+        const [year, month, day] = dateString.split('-').map(Number);
+        const date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+        const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const weekday = weekdays[date.getDay()];
+        return `${month}/${day} ${weekday}`;
+    };
 
     const renderDifficultyIcon = (difficulty) => {
         switch (difficulty) {
@@ -186,15 +208,137 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                         ))}
                     </div>
                     
-                    <p id="detail-description" className="text-gray-300 mt-4 text-sm md:text-base leading-relaxed">
-                        {destination.description}
-                    </p>
-                    
-                    <div className="mt-4">
-                        <ImageGallery 
-                            destination={destination} 
-                            onImageSelect={setCurrentImage} 
-                        />
+                    <div 
+                        className="mt-4 pr-2 scroll-snap-container custom-scrollbar" 
+                        style={{ 
+                            overflowY: 'scroll',
+                            height: '140px',
+                            minHeight: '140px',
+                            maxHeight: '140px'
+                        }}
+                    >
+                        <div className="scroll-snap-item">
+                            <p id="detail-description" className="text-gray-300 text-sm md:text-base leading-relaxed mb-4">
+                                {destination.description}
+                            </p>
+                        </div>
+                        
+                        <div className="scroll-snap-item mb-4">
+                            <ImageGallery 
+                                destination={destination} 
+                                onImageSelect={setCurrentImage} 
+                            />
+                        </div>
+                        
+                        
+                        {weatherForecast && (
+                            <div className="scroll-snap-item mb-4">
+                                <h3 className="text-white font-semibold mb-3">天气信息</h3>
+                                
+                                {/* Current weather */}
+                                <div className="backdrop-blur-xl rounded-lg p-3 mb-3"
+                                    style={{
+                                        background: `linear-gradient(135deg, 
+                                            rgba(255, 255, 255, 0.08) 0%, 
+                                            rgba(255, 255, 255, 0.03) 100%)`,
+                                        border: "1px solid rgba(255, 255, 255, 0.1)"
+                                    }}>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{getWeatherIcon(weatherForecast.weatherCode)}</span>
+                                        <div>
+                                            <div className="text-white font-medium">{weatherForecast.temp}°C</div>
+                                            <div className="text-gray-400 text-sm">{weatherForecast.condition}</div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                                        <div className="text-gray-300">
+                                            <span className="text-gray-400">体感:</span> {weatherForecast.feelsLike}°C
+                                        </div>
+                                        <div className="text-gray-300">
+                                            <span className="text-gray-400">湿度:</span> {weatherForecast.humidity}%
+                                        </div>
+                                        <div className="text-gray-300">
+                                            <span className="text-gray-400">风速:</span> {weatherForecast.wind}km/h
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Today's hourly forecast */}
+                                {weatherForecast.todayHourly && weatherForecast.todayHourly.length > 0 && (
+                                    <div className="scroll-snap-item mb-3">
+                                        <h4 className="text-white text-sm font-medium mb-2">今日逐时天气</h4>
+                                        <div className="backdrop-blur-xl rounded-lg p-3"
+                                            style={{
+                                                background: `linear-gradient(135deg, 
+                                                    rgba(255, 255, 255, 0.05) 0%, 
+                                                    rgba(255, 255, 255, 0.02) 100%)`,
+                                                border: "1px solid rgba(255, 255, 255, 0.08)"
+                                            }}>
+                                            <div className="flex gap-3 overflow-x-auto">
+                                                {weatherForecast.todayHourly.map((hourData, index) => (
+                                                    <div key={index} className="flex-shrink-0 text-center min-w-[60px]">
+                                                        <div className="text-[10px] text-gray-400 mb-2">
+                                                            {hourData.hour}
+                                                        </div>
+                                                        <div className="text-base mb-2">
+                                                            {getWeatherIcon(hourData.weatherCode, hourData.hourNumber)}
+                                                        </div>
+                                                        <div className="text-sm text-white font-medium mb-1">
+                                                            {hourData.temp}°
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-400 mb-1">
+                                                            {hourData.wind}km/h
+                                                        </div>
+                                                        {hourData.precipitation > 0 && (
+                                                            <div className="text-[10px] text-sky-400">
+                                                                {hourData.precipitation.toFixed(1)}mm
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* 5-day forecast if available */}
+                                {weatherForecast.forecast && (
+                                    <div className="scroll-snap-item">
+                                        <h4 className="text-white text-sm font-medium mb-2">5天预报</h4>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {weatherForecast.forecast.dates.map((date, index) => (
+                                                <div key={date} className="backdrop-blur-xl rounded-lg p-2 text-center"
+                                                    style={{
+                                                        background: `linear-gradient(135deg, 
+                                                            rgba(255, 255, 255, 0.05) 0%, 
+                                                            rgba(255, 255, 255, 0.02) 100%)`,
+                                                        border: "1px solid rgba(255, 255, 255, 0.08)"
+                                                    }}>
+                                                    <div className="text-[10px] text-gray-400 mb-1">
+                                                        {index === 0 ? '今天' : formatDate(date).split(' ')[1]}
+                                                    </div>
+                                                    <div className="text-base mb-1">
+                                                        {getWeatherIcon(weatherForecast.forecast.weatherCodes[index], 12)}
+                                                    </div>
+                                                    <div className="text-xs">
+                                                        <span className="text-white font-medium">{weatherForecast.forecast.maxTemps[index]}°</span>
+                                                        <span className="text-gray-400">/{weatherForecast.forecast.minTemps[index]}°</span>
+                                                    </div>
+                                                    <div className="text-[9px] text-gray-400 mt-1">
+                                                        {weatherForecast.forecast.maxWind[index]}km/h
+                                                    </div>
+                                                    {weatherForecast.forecast.precipitation[index] > 0 && (
+                                                        <div className="text-[9px] text-sky-400">
+                                                            {weatherForecast.forecast.precipitation[index].toFixed(1)}mm
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
