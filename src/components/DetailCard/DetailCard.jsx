@@ -155,7 +155,13 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                     </button>
                 </div>
                 
-                <div className="p-5 md:p-6">
+                <div className="p-5 md:p-6 relative">
+                    {/* Bottom gradient overlay for entire detail card */}
+                    <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none z-10"
+                        style={{
+                            background: `linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%)`
+                        }}>
+                    </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <h2 id="detail-name" className="text-2xl md:text-3xl font-bold text-white">{destination.name}</h2>
@@ -234,13 +240,6 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                             }}
                             onScroll={handleScroll}
                         >
-                        
-                        {/* Bottom gradient overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 h-4 pointer-events-none z-10"
-                            style={{
-                                background: `linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%)`
-                            }}>
-                        </div>
                         <div className="scroll-snap-item">
                             <p id="detail-description" className="text-gray-300 text-sm md:text-base leading-relaxed mb-4">
                                 {destination.description}
