@@ -45,7 +45,7 @@ function setCachedWeather(lat, lon, data) {
     }
 }
 
-export async function getWeatherData(lat, lon) {
+export async function getWeatherData(lat, lon, locationName = 'Unknown') {
     // Check cache first
     const cachedData = getCachedWeather(lat, lon);
     if (cachedData) {
@@ -117,7 +117,6 @@ export async function getWeatherData(lat, lon) {
                 maxWind: data.daily.wind_speed_10m_max ? data.daily.wind_speed_10m_max.slice(0, 5).map(w => Math.round(w)) : []
             } : null
         };
-        
         
         // Cache the successful response
         setCachedWeather(lat, lon, weatherData);

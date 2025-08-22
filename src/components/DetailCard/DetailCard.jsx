@@ -15,7 +15,7 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
             // Fetch weather forecast
             async function fetchForecast() {
                 try {
-                    const weather = await getWeatherData(destination.coords[0], destination.coords[1]);
+                    const weather = await getWeatherData(destination.coords[0], destination.coords[1], destination.name);
                     setWeatherForecast(weather);
                 } catch (error) {
                     setWeatherForecast(null);

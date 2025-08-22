@@ -11,7 +11,7 @@ function WeatherDisplay({ coords, destinationName }) {
 
         async function fetchWeather() {
             setLoading(true);
-            const data = await getWeatherData(coords[0], coords[1]);
+            const data = await getWeatherData(coords[0], coords[1], destinationName);
             
             if (mounted) {
                 setWeather(data);
