@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getWeatherData, getWeatherIcon } from '../../services/weatherService';
+import { getWeatherData } from '../../services/weatherService';
+import WeatherIcon from '../WeatherIcon/WeatherIcon';
 
 function WeatherDisplay({ coords, destinationName }) {
     const [weather, setWeather] = useState(null);
@@ -45,7 +46,7 @@ function WeatherDisplay({ coords, destinationName }) {
     return (
         <div className="absolute top-3 right-2 text-white">
             <div className="flex items-center gap-1">
-                <span className="text-sm">{getWeatherIcon(weather.weatherCode)}</span>
+                <WeatherIcon weatherCode={weather.weatherCode} className="w-4 h-4" />
                 <div className="flex flex-col leading-tight">
                     <span className="text-[11px] font-medium">{weather.temp}°</span>
                     <span className="text-[9px] text-white/60">{weather.wind}km/h</span>

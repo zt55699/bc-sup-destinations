@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ImageGallery from './ImageGallery.jsx';
-import { getWeatherData, getWeatherIcon } from '../../services/weatherService';
+import { getWeatherData } from '../../services/weatherService';
+import WeatherIcon from '../WeatherIcon/WeatherIcon';
 
 function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
     const [currentImage, setCurrentImage] = useState('');
@@ -244,7 +245,9 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                                         border: "1px solid rgba(255, 255, 255, 0.1)"
                                     }}>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{getWeatherIcon(weatherForecast.weatherCode)}</span>
+                                        <div className="w-8 h-8 flex items-center justify-center">
+                                            <WeatherIcon weatherCode={weatherForecast.weatherCode} className="w-8 h-8" />
+                                        </div>
                                         <div>
                                             <div className="text-white font-medium">{weatherForecast.temp}°C</div>
                                             <div className="text-gray-400 text-sm">{weatherForecast.condition}</div>
@@ -280,8 +283,8 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                                                         <div className="text-[10px] text-gray-400 mb-2">
                                                             {hourData.hour}
                                                         </div>
-                                                        <div className="text-base mb-2">
-                                                            {getWeatherIcon(hourData.weatherCode, hourData.hourNumber)}
+                                                        <div className="text-base mb-2 flex justify-center">
+                                                            <WeatherIcon weatherCode={hourData.weatherCode} hour={hourData.hourNumber} className="w-5 h-5" />
                                                         </div>
                                                         <div className="text-sm text-white font-medium mb-1">
                                                             {hourData.temp}°
@@ -317,8 +320,8 @@ function DetailCard({ destination, onClose, mapInstanceRef, onShowRoute }) {
                                                     <div className="text-[10px] text-gray-400 mb-1">
                                                         {index === 0 ? '今天' : formatDate(date).split(' ')[1]}
                                                     </div>
-                                                    <div className="text-base mb-1">
-                                                        {getWeatherIcon(weatherForecast.forecast.weatherCodes[index], 12)}
+                                                    <div className="text-base mb-1 flex justify-center">
+                                                        <WeatherIcon weatherCode={weatherForecast.forecast.weatherCodes[index]} hour={12} className="w-5 h-5" />
                                                     </div>
                                                     <div className="text-xs">
                                                         <span className="text-white font-medium">{weatherForecast.forecast.maxTemps[index]}°</span>
