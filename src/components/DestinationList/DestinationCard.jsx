@@ -6,7 +6,9 @@ function DestinationCard({
     isActive, 
     isHidden, 
     onSelect, 
-    onToggleVisibility 
+    onToggleVisibility,
+    isAnimatingOut = false,
+    animationDelay = 0
 }) {
     const titleRef = useRef(null);
     const tagsRef = useRef(null);
@@ -81,9 +83,15 @@ function DestinationCard({
     return (
         <div
             id={`card-${destination.id}`}
-            className={`top-card flex-shrink-0 w-48 p-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:border-white/40 hover:bg-white/20 relative ${
+            className={`top-card flex-shrink-0 w-48 p-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg cursor-pointer transition-all duration-500 hover:border-white/40 hover:bg-white/20 relative ${
                 isActive ? '!border-sky-400 !bg-white/20' : ''
-            } ${isHidden ? 'opacity-50' : ''}`}
+            } ${isHidden ? 'opacity-50' : ''} ${
+                isAnimatingOut ? 'animate-fade-out' : 'animate-fade-in'
+            }`}
+            style={{
+                animationDelay: `${animationDelay}ms`,
+                animationFillMode: 'both'
+            }}
             onClick={() => onSelect(destination.id)}
         >
             <WeatherDisplay 

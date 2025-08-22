@@ -17,6 +17,7 @@ function App() {
     const [routeInfo, setRouteInfo] = useState(null);
     const [routeStartCoords, setRouteStartCoords] = useState(null);
     const [isRouteAnimating, setIsRouteAnimating] = useState(false);
+    const [pendingResumeTimeout, setPendingResumeTimeout] = useState(null);
 
     const { 
         sortedDestinations, 
@@ -35,7 +36,7 @@ function App() {
         clearRoute
     } = useMap(setIsRouteAnimating);
 
-    const { stopAutoScroll } = useAutoScroll();
+    const { stopAutoScroll, resumeAutoScroll, updateSavedPosition, setSelectedDestination } = useAutoScroll();
 
     const {
         filters,
@@ -51,6 +52,15 @@ function App() {
     useEffect(() => {
         addMarkers(filteredDestinations, hiddenDestinations, selectDestination);
     }, [filteredDestinations, hiddenDestinations]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (pendingResumeTimeout) {
+                clearTimeout(pendingResumeTimeout);
+            }
+        };
+    }, [pendingResumeTimeout]);
 
     const updateActiveState = (newId) => {
         const allMarkers = document.querySelectorAll('.custom-map-marker');
@@ -70,7 +80,48 @@ function App() {
     };
 
     const showDetailCard = (destination) => {
+        // Cancel any pending auto-scroll resume to prevent conflicts
+        if (pendingResumeTimeout) {
+            clearTimeout(pendingResumeTimeout);
+            setPendingResumeTimeout(null);
+        }
+        
+        stopAutoScroll(false); // Don't save position when showing detail card, we'll center it manually
+        setSelectedDestination(destination.name); // Always track which destination's detail card is open
         setActiveDestination(destination);
+        
+        // Center the corresponding card for this destination
+        centerCardForDestination(destination);
+    };
+
+    const centerCardForDestination = (destination) => {
+        // Center the selected card with a small delay to ensure auto-scroll has stopped
+        setTimeout(() => {
+            const cardElement = document.getElementById(`card-${destination.id}`);
+            const container = document.getElementById('top-destinations-list');
+            
+            if (cardElement && container) {
+                // Calculate the scroll position to center the card
+                const cardCenter = cardElement.offsetLeft + (cardElement.offsetWidth / 2);
+                const containerCenter = container.clientWidth / 2;
+                const targetScrollLeft = cardCenter - containerCenter;
+                
+                // Ensure we don't scroll beyond bounds
+                const maxScroll = container.scrollWidth - container.clientWidth;
+                const finalScrollPosition = Math.max(0, Math.min(targetScrollLeft, maxScroll));
+                
+                // Smooth scroll to center the card
+                container.scrollTo({
+                    left: finalScrollPosition,
+                    behavior: 'smooth'
+                });
+                
+                // Update the saved position after scrolling completes
+                setTimeout(() => {
+                    updateSavedPosition();
+                }, 500); // Wait for smooth scroll to complete
+            }
+        }, 100); // Small delay to ensure auto-scroll has stopped
     };
 
     const hideDetailCard = () => {
@@ -89,6 +140,14 @@ function App() {
         setRouteStartCoords(null);
         updateActiveState(null);
         resetMapView();
+        
+        // Resume auto-scroll when both cards are closed
+        const resumeTimeout = setTimeout(() => {
+            resumeAutoScroll();
+            setPendingResumeTimeout(null);
+        }, 600); // Longer delay to ensure cards are hidden and animations complete
+        
+        setPendingResumeTimeout(resumeTimeout);
         
         // Delay showing difficulty legend, same as original
         const legend = document.getElementById('difficulty-legend');
@@ -125,16 +184,7 @@ function App() {
         const destination = sortedDestinations.find(d => d.id === id);
         if (destination) {
             flyToDestination(destination.coords);
-            showDetailCard(destination);
-            
-            const cardElement = document.getElementById(`card-${id}`);
-            if (cardElement) {
-                cardElement.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest', 
-                    inline: 'center' 
-                });
-            }
+            showDetailCard(destination); // This handles centering, destination tracking, and detail card display
         }
     };
 
@@ -166,6 +216,7 @@ function App() {
                 onFilterChange={handleFilterChange}
                 onResetFilters={resetFilters}
                 hasActiveFilters={hasActiveFilters}
+                showFilterButton={!activeDestination && !routeInfo && !isRouteAnimating}
             />
 
             <DetailCard

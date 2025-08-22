@@ -41,13 +41,34 @@ export function useMap(setIsRouteAnimating) {
     const addMarkers = (destinations, hiddenDestinations, onMarkerClick) => {
         if (!mapInstanceRef.current) return;
 
-        Object.values(markersRef.current).forEach(marker => {
-            mapInstanceRef.current.removeLayer(marker);
+        const currentDestinationIds = new Set(destinations.filter(d => !hiddenDestinations.has(d.id)).map(d => d.id));
+        const existingMarkerIds = new Set(Object.keys(markersRef.current));
+        
+        // Find markers to remove (animate out)
+        const markersToRemove = [...existingMarkerIds].filter(id => !currentDestinationIds.has(parseInt(id)));
+        
+        // Animate out old markers
+        markersToRemove.forEach(id => {
+            const markerElement = document.getElementById(`marker-${id}`);
+            if (markerElement) {
+                markerElement.classList.add('marker-fade-out');
+                setTimeout(() => {
+                    if (markersRef.current[id]) {
+                        mapInstanceRef.current.removeLayer(markersRef.current[id]);
+                        delete markersRef.current[id];
+                    }
+                }, 300); // Match CSS transition duration
+            }
         });
-        markersRef.current = {};
 
-        destinations.forEach(dest => {
+        // Add new markers
+        destinations.forEach((dest, index) => {
             if (!hiddenDestinations.has(dest.id)) {
+                const markerId = dest.id.toString();
+                
+                // Skip if marker already exists
+                if (markersRef.current[markerId]) return;
+                
                 const difficultyClass = dest.difficulty ? `difficulty-${dest.difficulty}` : '';
                 
                 const icon = L.divIcon({
@@ -59,7 +80,15 @@ export function useMap(setIsRouteAnimating) {
 
                 const marker = L.marker(dest.coords, { icon: icon }).addTo(mapInstanceRef.current);
                 marker.on('click', () => onMarkerClick(dest.id));
-                markersRef.current[dest.id] = marker;
+                markersRef.current[markerId] = marker;
+                
+                // Animate in new markers with stagger
+                setTimeout(() => {
+                    const markerElement = document.getElementById(`marker-${dest.id}`);
+                    if (markerElement) {
+                        markerElement.classList.add('marker-fade-in');
+                    }
+                }, 50 + index * 30); // Stagger the animations
             }
         });
     };
